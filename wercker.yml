@@ -1,47 +1,29 @@
 test:
-  box: node:8.9
+  box: node:12.16
   steps:
     - script:
-        name: install yarn
-        code: npm i -g yarn
-    - script:
-        name: set yarn cache
-        code: export YARN_CACHE=$WERCKER_CACHE_DIR/yarn
-    - script:
-        name: install dependencies
-        code: HOME=$YARN_CACHE yarn
+        name: npm install
+        code: npm install
     - script:
         name: lint
-        code: yarn lint
-    - script:
-        name: cleanup dev dependencies
-        code: HOME=$YARN_CACHE yarn --prod
+        code: npm run lint
   after-steps:
     - slack-notifier:
         url: $SLACK_WEBHOOK_URL
         channel: dev
 
 fetch:
-  box: node:8.9
+  box: node:12.16
   steps:
     - script:
         name: prepare
         code: ./prepare.sh
     - script:
-        name: install yarn
-        code: npm i -g yarn
-    - script:
-        name: set yarn cache
-        code: export YARN_CACHE=$WERCKER_CACHE_DIR/yarn
-    - script:
-        name: install dependencies
-        code: HOME=$YARN_CACHE yarn
+        name: npm install
+        code: npm install
     - script:
         name: fetch
-        code: yarn fetch
-    - script:
-        name: cleanup dev dependencies
-        code: HOME=$YARN_CACHE yarn --prod
+        code: npm run fetch
   after-steps:
     - slack-notifier:
         url: $SLACK_WEBHOOK_URL
