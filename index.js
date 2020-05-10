@@ -7,7 +7,9 @@ if (!process.env.EMAIL || !process.env.PASSWORD) {
 (async () => {
   const goToOpt = {waitUntil: ['load', 'networkidle0']}
 
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const page = await browser.newPage();
 
   // id.moneyforward.com で直接ログインすると、 moneyforward.com にはログインできない
