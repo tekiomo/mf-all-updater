@@ -1,55 +1,29 @@
-const puppeteer = require('puppeteer')
+const puppeteer = require('puppeteer');
 
 if (!process.env.EMAIL || !process.env.PASSWORD) {
   throw new Error('環境変数にEMAILまたはPASSWORDが指定されていません')
 }
 
-process.on('unhandledPromiseRejectionWarning', (error) => {
-  throw error
-})
+(async () => {
+  const goToOpt = {waitUntil: ['load', 'networkidle0']}
 
-puppeteer.launch({
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-}).then(async browser => {
-  process.on('unhandledRejection', (reason, p) => {
-    console.error(`Unhandled Rejection at: Promise ${p}\nreason: ${reason}`)
-    browser.close()
-  })
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
 
-  const ua = [
-    'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393',
-    'Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:50.0) Gecko/20100101 Firefox/50.0',
-    'Mozilla/5.0 (X11; Linux i686; rv:50.0) Gecko/20100101 Firefox/50.0',
-    'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36 OPR/42.0.2393.94'
-  ]
-
-  const page = await browser.newPage()
-  const option = {
-    userAgent: ua[Math.floor(Math.random() * (ua.length - 1))],
-    viewport: {
-      height: 1000,
-      width: 1000
-    }
-  }
-  console.log('option:', option)
-  await page.emulate(option)
-  await page.goto('https://moneyforward.com/users/sign_in')
-  console.log(`page opened: ${page.url()}`)
-
-  await page.type('#sign_in_session_service_email', process.env.EMAIL)
-  await page.type('#sign_in_session_service_password', process.env.PASSWORD)
+  // id.moneyforward.com で直接ログインすると、 moneyforward.com にはログインできない
+  // moneyforward.com からログインページに移動すること
+  await page.goto('https://moneyforward.com/', goToOpt);
+  await page.click('a[href="/users/sign_in"]')
+  // XXX click しただけではページが真っ白なまま
+  // goto で移動し直す
+  await page.goto(page.url(), goToOpt);
+  // メールアドレスによる認証を選択
+  await page.click('.buttonWrapper a:nth-child(1)')
+  await page.type('input[type="email"]', process.env.EMAIL);
   await page.click('input[type="submit"]')
-  console.log('try signin...')
-  await page.waitForNavigation({waitUntil: 'domcontentloaded'})
-  console.log(`page opened: ${page.url()}`)
-
-  await page.goto('https://moneyforward.com/accounts')
-  console.log(`page opened: ${page.url()}`)
+  await page.type('input[type="password"]', process.env.PASSWORD);
+  await page.click('input[type="submit"]')
+  await page.goto('https://moneyforward.com/accounts', goToOpt)
 
   // 押下可能な更新ボタンの数を調べる
   const buttonSelector = 'input:not(disabled)[type="submit"][name="commit"][value="更新"]'
@@ -80,4 +54,4 @@ puppeteer.launch({
   }
 
   await browser.close()
-})
+})();
