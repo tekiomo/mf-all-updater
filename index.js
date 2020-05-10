@@ -7,7 +7,9 @@ if (!process.env.EMAIL || !process.env.PASSWORD) {
 (async () => {
   const goToOpt = {waitUntil: ['load', 'networkidle0']}
 
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const page = await browser.newPage();
 
   // id.moneyforward.com で直接ログインすると、 moneyforward.com にはログインできない
@@ -17,12 +19,22 @@ if (!process.env.EMAIL || !process.env.PASSWORD) {
   // XXX click しただけではページが真っ白なまま
   // goto で移動し直す
   await page.goto(page.url(), goToOpt);
-  // メールアドレスによる認証を選択
-  await page.click('.buttonWrapper a:nth-child(1)')
+  // メールアドレスによる認証ページへ移動
+  // click だと input[type="email"] が見つからない場合がある
+  const signinUrl = await page.evaluate(
+      () => Array.from(
+        document.querySelectorAll('.buttonWrapper a:nth-child(1)'),
+        a => a.getAttribute('href')
+      )
+    );
+  await page.goto(`https://id.moneyforward.com${signinUrl[0]}`, goToOpt);
+
   await page.type('input[type="email"]', process.env.EMAIL);
   await page.click('input[type="submit"]')
+
   await page.type('input[type="password"]', process.env.PASSWORD);
   await page.click('input[type="submit"]')
+
   await page.goto('https://moneyforward.com/accounts', goToOpt)
 
   // 押下可能な更新ボタンの数を調べる
