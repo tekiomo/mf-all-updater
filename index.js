@@ -17,7 +17,7 @@ const main = async () => {
     // id.moneyforward.com で直接ログインすると、 moneyforward.com にはログインできない
     // moneyforward.com からログインページに移動すること
     await page.goto('https://moneyforward.com/', goToOpt);
-    await page.click('a[href="/users/sign_in"]')
+    await page.click('a[href="/sign_in"]')
     // XXX click しただけではページが真っ白なまま
     // goto で移動し直す
     await page.goto(page.url(), goToOpt);
