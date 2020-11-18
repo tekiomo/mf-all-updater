@@ -1,5 +1,8 @@
 test:
-  box: node:12.16
+  box:
+    id: node:12.16
+    username: $DOCKER_HUB_USERNAME
+    password: $DOCKER_HUB_PASSWORD
   steps:
     - script:
         name: npm install
@@ -13,7 +16,10 @@ test:
         channel: dev
 
 fetch:
-  box: node:12.16
+  box:
+    id: node:12.16
+    username: $DOCKER_HUB_USERNAME
+    password: $DOCKER_HUB_PASSWORD
   steps:
     - script:
         name: prepare
